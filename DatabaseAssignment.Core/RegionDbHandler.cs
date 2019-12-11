@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+
 using System.IO;
 
 using MongoDB.Driver;
 using MongoDB.Bson;
+using System.Diagnostics;
 
 namespace DatabaseAssignment.Core
 {
@@ -33,16 +37,15 @@ namespace DatabaseAssignment.Core
 
         public void TransferRegionsFromFileToDb(string filePath)
         {
-            using (var streamReader = new StreamReader(filePath))
-            {
-                // Discard the heading
-                _ = streamReader.ReadLine();
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
 
-                while (streamReader.EndOfStream() == false)
-                {
-                    Collection.InsertOne(streamReader.ReadLine().ToRegion().ToBson());
-                }
-            }
+            var bsonDocuments = File.ReadAllLines(filePath).Select(line => line.ToRegion().ToBson());   
+            Collection.InsertMany(bsonDocuments);
+
+            stopwatch.Stop();
+
+            Console.WriteLine($"Time taken to insert: {stopwatch.ElapsedMilliseconds / 1000} seconds.");
         }
     }
 }
